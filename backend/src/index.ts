@@ -8,8 +8,10 @@ export default {
 		if (path === "/data/all" && method === "GET") {
 			try {
 				const result = await env.LINKS_DB.prepare("SELECT name, url FROM links").all();
+				const links = result.results ?? result.rows ?? [];
+
 				return new Response(
-					JSON.stringify({ status: 200, message: "OK", links: result.records }),
+					JSON.stringify({ status: 200, message: "OK", links: links }),
 					{
 						status: 200,
 						statusText: "OK",
@@ -22,11 +24,13 @@ export default {
 					}
 				);
 			} catch (err: any) {
+				const errorMessage = err?.message ?? String(err);
+
 				return new Response(
-					JSON.stringify({ status: 500, message: "Fatal Server Error" }),
+					JSON.stringify({ status: 500, message: "Unable to process request", error: errorMessage }),
 					{
 						status: 500,
-						statusText: "Fatal Server Error",
+						statusText: "Unable to process request",
 						headers: {
 							"Content-Type": "application/json",
 							"Cache-Control": "no-store",
@@ -45,7 +49,7 @@ export default {
 					JSON.stringify({ status: 401, message: "Unauthorized" }),
 					{
 						status: 401,
-						statusText: "Unathorized",
+						statusText: "Unauthorized",
 						headers: {
 							"Content-Type": "application/json",
 							"Cache-Control": "no-store",
@@ -144,9 +148,11 @@ export default {
 						},
 					}
 				);
-			} catch {
+			} catch (err: any) {
+				const errorMessage = err?.message ?? String(err);
+
 				return new Response(
-					JSON.stringify({ status: 500, message: "Unable to process request" }),
+					JSON.stringify({ status: 500, message: "Unable to process request", error: errorMessage }),
 					{
 						status: 500,
 						statusText: "Unable to process request",
